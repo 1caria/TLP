@@ -10,7 +10,8 @@ export class Section {
         ogd,
         pmc,
         str,
-        han
+        han,
+        he
     ) {
         this.label = label
         this.fontSize = fontSize
@@ -22,11 +23,14 @@ export class Section {
         this.pmc = pmc
         this.str = str
         this.han = han
+        this.he = he
     }
     getTextForSelectedVersion(version) {
         let v
         if (version == "han") {
             v = this.han
+        } else if (version == "he") {
+            v = this.he
         } else if (version == "ger") {
             v = this.ger
         } else if (version == "ogd") {
@@ -41,6 +45,7 @@ export class Section {
     displayText(showSelector, version, divCounter, template, util) {
         let div = "collapse" + divCounter
         let hasHanTranslation = Boolean(this.han && this.han.trim())
+        let hasHeTranslation = Boolean(this.he && this.he.trim())
         //create a new div and append to accordion div. Add 'Section ' + to line 48 for optional label
         let element = $(
             '<div class="panel panel-default">' +
@@ -73,6 +78,11 @@ export class Section {
                             .prop("disabled", true)
                             .text("韩林合译本（待导入）")
                     }
+                    if (!hasHeTranslation) {
+                        $("option[value='he']", this)
+                            .prop("disabled", true)
+                            .text("贺绍甲译本（待导入）")
+                    }
                 })
             )
             element.addClass("individual-section")
@@ -97,11 +107,17 @@ export class Section {
             "han",
             this.getTextForSelectedVersion("han")
         )
+        $("#" + div + " .panel-body").attr(
+            "he",
+            this.getTextForSelectedVersion("he")
+        )
         $("#" + div + " .panel-body").append(
             $('<li class="text-display-li">' + text + "</li>").load(
                 text,
                 function () {
-                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div])
+                    if (typeof MathJax !== "undefined" && MathJax.Hub) {
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, div])
+                    }
                 }
             )
         )

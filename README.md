@@ -4,9 +4,17 @@
 
 本仓库基于 Matthew Butler 的 MIT 许可项目 [`aqhali/TLP`](https://github.com/aqhali/TLP)。原项目代码许可见 `LICENSE`。
 
-## 韩林合译文
+## 中文译文
 
-韩林合译文受其权利人的许可约束，因此仓库只提供数据接口，不附带未经授权复制的全文。获得合法文本后，将 525 个有正文的命题整理成以下任一 JSON 格式：
+仓库中的 `src/data/hanLinhe.json` 和 `src/data/heShaojia.json` 分别是韩林合、贺绍甲译本的 525 条有正文命题。数据由项目目录中的 PDF/EPUB 源文件生成；源文件受版权约束，不纳入 Git。重新生成译文数据：
+
+```powershell
+node scripts/generate-translations.js
+```
+
+生成器会按 `src/data/sections.json` 的有效命题编号校验完整性，并保留 `6.021` 这类原站无德文正文的空节点。
+
+如需从其他合法文本导入韩林合译文，可使用导入器。输入文件应整理成以下任一 JSON 格式：
 
 ```json
 {
@@ -37,7 +45,7 @@ npm run translation:check -- D:\资料\han-linhe.json
 npm run translation:import -- D:\资料\han-linhe.json
 ```
 
-导入成功后，译文写入 `src/data/hanLinhe.json`，并自动成为《逻辑哲学论》模式的默认版本。《原型逻辑哲学论》仍保留原站提供的德文与皮尔斯/麦吉尼斯版本。
+导入成功后，译文写入 `src/data/hanLinhe.json`。韩林合译本是《逻辑哲学论》模式的默认版本；贺绍甲译本可在版本选择器中切换。《原型逻辑哲学论》仍保留原站提供的德文与皮尔斯/麦吉尼斯版本。
 
 ## 开发
 

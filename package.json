@@ -9,9 +9,10 @@
     "watch": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack --watch",
     "webpack": "webpack",
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack-dev-server --open-page dist/index.html",
-    "test": "node --test scripts/import-han-linhe.test.js",
+    "test": "node --test scripts/import-han-linhe.test.js scripts/generate-translations.test.js",
     "translation:import": "node scripts/import-han-linhe.js",
-    "translation:check": "node scripts/import-han-linhe.js --validate-only"
+    "translation:check": "node scripts/import-han-linhe.js --validate-only",
+    "translation:generate": "node scripts/generate-translations.js"
   },
   "author": "Matthew Butler",
   "license": "MIT",

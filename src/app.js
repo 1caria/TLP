@@ -25,24 +25,32 @@ let ptSectionsJson = require("./data/ptSections.json")
 let linesJson = require("./data/lines.json")
 let ptLinesJson = require("./data/ptLines.json")
 let hanLinheJson = require("./data/hanLinhe.json")
+let heShaojiaJson = require("./data/heShaojia.json")
 
 const hanLinheSections = hanLinheJson.sections || {}
+const heShaojiaSections = heShaojiaJson.sections || {}
 sectionsJson.sections.forEach(function (section) {
     section.han = hanLinheSections[section.label] || ""
+    section.he = heShaojiaSections[section.label] || ""
 })
-const hasCompleteHanLinheTranslation = sectionsJson.sections
-    .filter(function (section) {
-        return section.ger && section.ger.trim()
-    })
+const translatableSections = sectionsJson.sections.filter(function (section) {
+    return section.ger && section.ger.trim()
+})
+const hasCompleteHanLinheTranslation = translatableSections
     .every(function (section) {
         return section.han && section.han.trim()
     })
+const hasCompleteHeShaojiaTranslation = translatableSections
+    .every(function (section) {
+        return section.he && section.he.trim()
+    })
 const defaultTlpVersion = hasCompleteHanLinheTranslation ? "han" : "ger"
+const tlpVersions = ["han", "he", "ger", "ogd", "pmc", "str"]
 export var tractatus
 ;(function (tractatus) {
     class Container {
         constructor() {
-            // version = han, ger, pmc, ogd (TLP); ger, pmc (PT)
+            // version = han, he, ger, pmc, ogd (TLP); ger, pmc (PT)
             this._version = defaultTlpVersion
             this._gap = 50
             this._width = $("#map").width() //doesn't work yet
@@ -70,9 +78,12 @@ export var tractatus
                 return storedVersion == "pmc" ? "pmc" : "ger"
             }
             if (storedVersion == "han" && !hasCompleteHanLinheTranslation) {
-                return "ger"
+                return defaultTlpVersion
             }
-            if (storedVersion != null) {
+            if (storedVersion == "he" && !hasCompleteHeShaojiaTranslation) {
+                return defaultTlpVersion
+            }
+            if (tlpVersions.indexOf(storedVersion) >= 0) {
                 return storedVersion
             }
             return this._version
@@ -177,6 +188,11 @@ export var tractatus
                     .prop("disabled", true)
                     .text("韩林合译本（待导入）")
             }
+            if (!hasCompleteHeShaojiaTranslation) {
+                $("option[value='he']")
+                    .prop("disabled", true)
+                    .text("贺绍甲译本（待导入）")
+            }
             $("#version-selector-all").val(version)
             $("#reset-btn").on("click", function () {
                 localStorage.setItem("tlp-version", defaultTlpVersion)
@@ -202,7 +218,7 @@ export var tractatus
                 $("#pt-btn")
                     .html("加载《逻辑哲学论》")
                     .val("加载《逻辑哲学论》")
-                $("option[value='ogd'], option[value='han']").remove()
+                $("option[value='ogd'], option[value='han'], option[value='he']").remove()
                 $("#page-select-form").show()
             } else {
                 $("#pt-btn")
@@ -267,11 +283,13 @@ export var tractatus
                                     )
                                 )
                                 .load(text, function () {
-                                    MathJax.Hub.Queue([
-                                        "Typeset",
-                                        MathJax.Hub,
-                                        parentDivId,
-                                    ])
+                                    if (typeof MathJax !== "undefined" && MathJax.Hub) {
+                                        MathJax.Hub.Queue([
+                                            "Typeset",
+                                            MathJax.Hub,
+                                            parentDivId,
+                                        ])
+                                    }
                                 })
                             //check if page is pt
                             if (container.template == "pt") {
@@ -312,11 +330,13 @@ export var tractatus
                             $('<li class="text-display-li">' + text + "</li>")
                         )
                         .load(text, function () {
-                            MathJax.Hub.Queue([
-                                "Typeset",
-                                MathJax.Hub,
-                                parentDivId,
-                            ])
+                            if (typeof MathJax !== "undefined" && MathJax.Hub) {
+                                MathJax.Hub.Queue([
+                                    "Typeset",
+                                    MathJax.Hub,
+                                    parentDivId,
+                                ])
+                            }
                         })
                     //check if page is pt
                     if (container.template == "pt") {
@@ -388,7 +408,8 @@ export var tractatus
                     section.ogd,
                     section.pmc,
                     section.str,
-                    section.han
+                    section.han,
+                    section.he
                 )
 
                 container.divCounter = node.displayText(
@@ -434,7 +455,8 @@ export var tractatus
                     o.ogd,
                     o.pmc,
                     o.str,
-                    o.han
+                    o.han,
+                    o.he
                 )
                 sectionAr.push(section)
             })
