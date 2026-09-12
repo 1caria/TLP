@@ -27,6 +27,11 @@ test("keeps web formatting for formulas, tables, paragraphs, and figures", () =>
         assert.match(translations["6.1203"], /abfigurefivegerman\.svg/)
     }
 
+    assert.match(han["4.27"], /class="possibilities"/)
+    assert.match(han["4.31"], /class="truthtable"/)
+    assert.equal((han["4.31"].match(/class="truthtable"/g) || []).length, 3)
+    assert.match(han["4.442"], /class="truthtable"/)
+
     assert.match(han["5.101"], /同语反复式/)
     assert.doesNotMatch(han["5.101"], /重言式/)
 

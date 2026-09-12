@@ -122,11 +122,41 @@ function translatedTruthTable(isHan) {
     return `<table class="fnlist">${rows.map(renderRow).join('')}</table>`
 }
 
+function possibilitiesMarkup(symbol = "K") {
+    return `<table class="possibilities"><tr><td rowspan="3" class="middleright">${math(`${symbol}<sub><var>n</var></sub> = `)}</td><td class="summationtop">${math('<var class="smallvar">n</var>')}</td><td rowspan="3" class="middleright"><span class="largeparen">(</span></td><td rowspan="3" class="middlecenter">${math('<var>n</var>')}<br />${math('<var>ν</var>')}</td><td rowspan="3" class="middleleft"><span class="largeparen">)</span></td></tr><tr><td class="summationmiddle">${math('<span class="largeop">∑</span>')}</td></tr><tr><td class="summationbottom">${math('<span class="smallvar">ν = 0</span>')}</td></tr></table>`
+}
+
+function truthPossibilitiesMarkup() {
+    const rows3 = ["<th class=\"l\">p</th><th class=\"m\">q</th><th class=\"e\">r</th>", "<td class=\"l\">W</td><td class=\"m\">W</td><td class=\"e\">W</td>", "<td class=\"l\">F</td><td class=\"m\">W</td><td class=\"e\">W</td>", "<td class=\"l\">W</td><td class=\"m\">F</td><td class=\"e\">W</td>", "<td class=\"l\">W</td><td class=\"m\">W</td><td class=\"e\">F</td>", "<td class=\"l\">F</td><td class=\"m\">F</td><td class=\"e\">W</td>", "<td class=\"l\">F</td><td class=\"m\">W</td><td class=\"e\">F</td>", "<td class=\"l\">W</td><td class=\"m\">F</td><td class=\"e\">F</td>", "<td class=\"l\">F</td><td class=\"m\">F</td><td class=\"e\">F</td>"]
+    const rows2 = ["<th class=\"l\">p</th><th class=\"e\">q</th>", "<td class=\"l\">W</td><td class=\"e\">W</td>", "<td class=\"l\">F</td><td class=\"e\">W</td>", "<td class=\"l\">W</td><td class=\"e\">F</td>", "<td class=\"l\">F</td><td class=\"e\">F</td>"]
+    const rows1 = ["<th class=\"e\">p</th>", "<td class=\"e\">W</td>", "<td class=\"e\">F</td>"]
+    const table = (rows) => `<table class="truthtable">${rows.map((row) => `<tr>${row}</tr>`).join("")}</table>`
+    return `<div class="centered">${table(rows3)}<span class="padrthree"></span>${table(rows2)}<span class="padrthree"></span>${table(rows1)}</div>`
+}
+
+function propositionTableMarkup() {
+    return `<div class="centered"><table class="truthtable"><tr><th></th><th class="l">${math(variable("p"))}</th><th class="m">${math(variable("q"))}</th><th class="e"></th><th>“</th></tr><tr><td></td><td class="l">W</td><td class="m">W</td><td class="e">W</td><td></td></tr><tr><td></td><td class="l">F</td><td class="m">W</td><td class="e">W</td><td></td></tr><tr><td></td><td class="l">W</td><td class="m">F</td><td class="e"></td><td></td></tr><tr><td>„</td><td class="l">F</td><td class="m">F</td><td class="e">W</td><td></td></tr></table></div>`
+}
+
 function applyFormatOverrides(result, translator) {
     const isHan = translator === "韩林合"
+    if (isHan) {
+        result["4.27"] = `相对于 ${math(variable("n"))} 个基本事态的存在和不存在，有 ${possibilitiesMarkup()} 种可能情况。这些基本事态的所有组合中的任何一种都可以存在，而其它的组合则不能存在。`
+        result["4.31"] = `我们可以通过如下形式的图式来表现这些真值可能情况（其中，“W”意谓“wahr”［真］，“F”意谓“falsch”［假］，第一行是由诸基本命题组成的，位于其下的诸“W”和“F”行则以一种容易理解的表示方式意谓这些基本命题的诸种真值可能情况）：${truthPossibilitiesMarkup()}这个等式右边的公式等于 ${math("2^n") }。因此 ${math("K_n = 2^n") }。`
+        result["4.42"] = `关于一个命题与 ${math(variable("n"))} 个基本命题的诸种真值可能情况的一致和不一致，有 ${possibilitiesMarkup("L")} 种可能情况。`
+        result["4.442"] = `例如，如下图式${propositionTableMarkup()}便是一个命题符号。<br />（弗雷格的“判断线”“${math("⊢")}”从逻辑上说完全没有意义；在弗雷格［和罗素］那里，它只是表明了这些作者将如此表示的命题看作真的。因此，正如比如一个命题的序号不属于命题结构一样，“${math("⊢")}”也不属于命题结构。一个命题不能自己断言自己是真的。）<br />如果这个图式中诸真值可能情况的次序经由一条组合规则而一劳永逸地确定下来，那么单单最后一列便已然是诸真值条件的表达了。如果我们将这一列改写成行，那么这个命题符号便成为：<br />${math("“（WW—W）（p，q）”")}<br />或者，为了更为清楚明白，可将其表述如下：<br />${math("“（WWFW）（p，q）”")}<br />（左括弧中的位数是由右括弧中的项数决定的。）`
+        result["3.3441"] = result["3.3441"].replace(/"-P"/g, '"-p"').replace(/或者P，或者 q/g, "或者p，或者q")
+        result["4.062"] = result["4.062"].replace(/P/g, "p")
+        result["4.0621"] = result["4.0621"].replace(/" P "/g, '" p "').replace(/" - P "/g, '" - p "')
+        result["4.24"] = result["4.24"].replace(/字母P，q，r/g, "字母p，q，r")
+        result["5.141"] = result["5.141"].replace(/q 得自于 P/g, "q 得自于 p")
+        result["5.1311"] = result["5.1311"].replace(/- P/g, "- p").replace(/既非 P 也非 q/g, "既非 p 也非 q")
+        result["6.1221"] = result["6.1221"].replace(/得自于 P/g, "得自于 p")
+        result["5.2522"] = `因此，我将一个形式序列 ${math("a，Ω’a，Ω’Ω’a，……")} 的通项写作：${math("“[a，x，Ω’x]”")}。这个括弧表达式是一个变项。其第一项为该形式序列的首项，其第二项为该序列的任意一项 ${math(variable("x"))} 的形式，其第三项为该序列的紧跟着 ${math(variable("x"))} 的那一项的形式。`
+    }
     result["5.02"] = isHan
-        ? `人们很容易将函项的主目与名称的标号混淆在一起。因为我从主目和标号中都能认出包含着它们的符号的所指。比如，在罗素的“${math(`${relation('+')}${subscript('','c')}`)}”中，“${math(subscript('','c'))}”就是一个标号，它表示，这个整个符号是基数的加法符号。但是，这种表示方式是以任意的约定为基础的，人们也可以不使用“${math(`${relation('+')}${subscript('','c')}`)}”，而选择一个简单符号；但是，在“${math('<span class="mathop">~</span>'+variable('p'))}”中 ${math(variable('p'))} 并不是一个标号，而是一个主目：在未理解 ${math(variable('p'))} 的意义之前，我们是不能理解 ${math('<span class="mathop">~</span>'+variable('p'))} 的意义的。<br />（在儒略・恺撒这个名称中，“儒略”是一个标号。一个标号总是构成了关于这样一个对象的描述的一个部分，我们将该标号附加在它的名称之上。比如，儒略氏族的那个恺撒。）<br />如果我没有弄错的话，弗雷格关于命题和函项的所指的理论就是建立在主目和标号的混淆基础之上的。对于弗雷格来说，诸逻辑命题是名称，而其主目就是这些名称的标号。`
-        : `函项的主目很容易和名称的附标相混淆。因为从主目和附标我都能看出包含它们的那些记号的指谓。<br />例如，当罗素写“${math(`${relation('+')}${subscript('','c')}`)}”时，其中 ${math(subscript('','c'))} 就是一个附标，它指明整个记号是用于基数的加号。但是这种标记法是一种任意约定的结果，因而完全可能选择一个简单的记号来代替“${math(`${relation('+')}${subscript('','c')}`)}”；可是，在“${math('<span class="mathop">~</span>'+variable('p'))}”中，${math(variable('p'))} 不是附标而是主目：除非已经先理解了 ${math(variable('p'))} 的意义，“${math('<span class="mathop">~</span>'+variable('p'))}”的意义就<u>不可能</u>理解。<br />（在名称尤利乌斯・恺撒中，“尤利乌斯”是一个附标。附标总是对对象的描述的一部分，我们把它附加到对象的名称上面：例如尤利乌斯家族中的<u>这位</u>恺撒。）<br />如果我没有弄错，弗雷格关于命题和函项的指谓理论，就是建立在混淆主目和附标的基础之上的。弗雷格认为逻辑命题是名称，而它们的主目则是这些名称的附标。`
+        ? `人们很容易将函项的主目与名称的标号混淆在一起。因为我从主目和标号中都能认出包含着它们的符号的所指。比如，在罗素的“${math(`${relation('+')}${subscript('','c')}`)}”中，“${math(subscript('','c'))}”就是一个标号，它表示，这个整个符号是基数的加法符号。但是，这种表示方式是以任意的约定为基础的，人们也可以不使用“${math(`${relation('+')}${subscript('','c')}`)}”，而选择一个简单符号；但是，在“${math('<span class="mathop">~</span>'+variable('p'))}”中 ${math(variable('p'))} 并不是一个标号，而是一个主目：在未理解 ${math(variable('p'))} 的意义之前，我们是不能理解 ${math('<span class="mathop">~</span>'+variable('p'))} 的意义的。（在儒略・恺撒这个名称中，“儒略”是一个标号。一个标号总是构成了关于这样一个对象的描述的一个部分，我们将该标号附加在它的名称之上。比如，儒略氏族的那个恺撒。）<br />如果我没有弄错的话，弗雷格关于命题和函项的所指的理论就是建立在主目和标号的混淆基础之上的。对于弗雷格来说，诸逻辑命题是名称，而其主目就是这些名称的标号。`
+        : `函项的主目很容易和名称的附标相混淆。因为从主目和附标我都能看出包含它们的那些记号的指谓。<br />例如，当罗素写“${math(`${relation('+')}${subscript('','c')}`)}”时，其中 ${math(subscript('','c'))} 就是一个附标，它指明整个记号是用于基数的加号。但是这种标记法是一种任意约定的结果，因而完全可能选择一个简单的记号来代替“${math(`${relation('+')}${subscript('','c')}`)}”；可是，在“${math('<span class="mathop">~</span>'+variable('p'))}”中，${math(variable('p'))} 不是附标而是主目：除非已经先理解了 ${math(variable('p'))} 的意义，“${math('<span class="mathop">~</span>'+variable('p'))}”的意义就<u>不可能</u>理解。（在名称尤利乌斯・恺撒中，“尤利乌斯”是一个附标。附标总是对对象的描述的一部分，我们把它附加到对象的名称上面：例如尤利乌斯家族中的<u>这位</u>恺撒。）<br />如果我没有弄错，弗雷格关于命题和函项的指谓理论，就是建立在混淆主目和附标的基础之上的。弗雷格认为逻辑命题是名称，而它们的主目则是这些名称的附标。`
 
     const truthIntro = isHan
         ? '每一给定数目的基本命题的诸种真值函项都可以写成如下形式的图式：'
@@ -189,7 +219,7 @@ function stripEpubLabel(content, rawLabel) {
         .trim()
 }
 
-function parseEpub() {
+function parseEpub(applyOverrides = true) {
     ensureSourceFiles()
     const html = fs.readFileSync(epubHtmlPath, "utf8")
     const paragraphPattern = /<p\b[^>]*class="([^"]+)"[^>]*>([\s\S]*?)<\/p>/gi
@@ -219,7 +249,7 @@ function parseEpub() {
             result[item.label] = normalizeTranslationMarkup(item.parts.join("<br />"))
         }
     })
-    applyFormatOverrides(result, "贺绍甲")
+    if (applyOverrides) applyFormatOverrides(result, "贺绍甲")
     assertComplete(result, "贺绍甲")
     return result
 }
@@ -348,7 +378,7 @@ function cleanPdfBlock(lines, label) {
         .trim()
 }
 
-function parseHanPdf() {
+function parseHanPdf(applyOverrides = true) {
     ensureSourceFiles()
     const lines = fs.readFileSync(pdfTextPath, "utf8").split(/\r?\n/)
     const orderedLabels = parseEpubLabelsInOrder()
@@ -382,9 +412,10 @@ function parseHanPdf() {
         result[label] = cleanPdfBlock(lines.slice(heading, next), label)
         cursor = next
     }
-    // The PDF places the six short headings 6.021-6.11 before their text objects.
-    // Restore their visible text from the same extracted page in visual order.
-    result["6.022"] =
+    if (applyOverrides) {
+        // The PDF places the six short headings 6.021-6.11 before their text objects.
+        // Restore their visible text from the same extracted page in visual order.
+        result["6.022"] =
         "数概念只不过是所有数的共同之处，数的一般的形式。数概念是变动的数。数相同概念是所有特殊的数相同的一般的形式。"
     result["6.03"] = "整数的一般形式是：[0，ξ，ξ+1]。"
     result["6.031"] =
@@ -408,9 +439,10 @@ function parseHanPdf() {
         "如下之点必须显示自身于我们的记号之中：通过“∨”等等彼此结合在一起的东西必须是命题。事实上也的确如此，因为记号“p”和“q”本身实际上就已经预设了“∨”、“～”等等。如果出现于“p∨q”中的符号“p”所代表的不是一个复合的符号，那么就其自身而言它不可能具有意义；但是这时与“p”具有相同的意义的符号“p∨p”、“p·q”等等也不能具有意义。但是，如果“p∨p”没有意义，那么“p∨q”也不能具有意义。"
     result["6.02"] =
         "由此我们便得到了数。我给出如下定义：x = Ω<sup>0</sup>'x Def. 和 Ω'Ω<sup>v</sup>'x = Ω<sup>v+1</sup>'x Def。"
-    result["5.641"] = result["5.641"].split("在与奥格登讨论")[0].trim()
-    applyFormatOverrides(result, "韩林合")
-    assertComplete(result, "韩林合")
+        result["5.641"] = result["5.641"].split("在与奥格登讨论")[0].trim()
+    }
+    if (applyOverrides) applyFormatOverrides(result, "韩林合")
+    if (applyOverrides) assertComplete(result, "韩林合")
     return result
 }
 
