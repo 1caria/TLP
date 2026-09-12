@@ -49,6 +49,134 @@ function cleanEpubHtml(value) {
         .trim()
 }
 
+function normalizeTranslationMarkup(value) {
+    return value
+        // EPUB image references are relative to the EPUB OEBPS directory. In
+        // the web app they live in dist/images instead.
+        .replace(/src=\"(?:\.\.\/)?(?:images\/)?(Image\d+\.jpg)\"/gi, 'src="images/$1"')
+        .replace(/\s+\/?>/g, (match) => match)
+        .trim()
+}
+
+function math(content) {
+    return `<span class="mathmode">${content}</span>`
+}
+
+function variable(name) {
+    return `<var>${name}</var>`
+}
+
+function relation(symbol) {
+    return `<span class="mathrel">${symbol}</span>`
+}
+
+function figureMarkup(name, width, height, alt) {
+    return `<!-- noindent --><div class="centered"><object data="images/${name}.svg" type="image/svg+xml" width="${width}" height="${height}"><img src="images/${name}.png" alt="${alt}" /></object></div> <!-- noindent -->`
+}
+
+function subscript(base, value) {
+    return base
+        ? `${variable(base)}<sub>${variable(value)}</sub>`
+        : `<sub>${variable(value)}</sub>`
+}
+
+function translatedTruthTable() {
+    const rows = [
+        ['W','W','W','W','重言式（如果 {p}，那么 {p}；并且如果 {q}，那么 {q}。）',''],
+        ['F','W','W','W','用话来说：','非 {p} 且 {q} 两者皆成立。'],
+        ['W','F','W','W','”','如果 {q}，那么 {p}。'],
+        ['W','W','F','W','”','如果 {p}，那么 {q}。'],
+        ['W','W','W','F','”','或者 {p}，或者 {q}。'],
+        ['F','F','W','W','”','非 {q}。'],
+        ['F','W','F','W','”','非 {p}。'],
+        ['F','W','W','F','”','{p} 或者 {q}，但并非二者皆成立。'],
+        ['W','F','F','W','”','如果 {p}，那么 {q}；并且如果 {q}，那么 {p}。'],
+        ['W','F','W','F','”','{p}。'],
+        ['W','W','F','F','”','{q}。'],
+        ['F','F','F','W','”','既非 {p}，也非 {q}。'],
+        ['F','F','W','F','”','{p} 并且非 {q}。'],
+        ['F','W','F','F','”','{q} 并且非 {p}。'],
+        ['W','F','F','F','”','{q} 并且 {p}。'],
+        ['F','F','F','F','矛盾式','{p} 并且非 {p}；并且 {q} 并且非 {q}。'],
+    ]
+    const renderText = (text) => text
+        .replace(/\{p\}/g, math(variable('p')))
+        .replace(/\{q\}/g, math(variable('q')))
+    const renderFormula = (text) => math(text
+        .replace(/\{p\}/g, variable('p'))
+        .replace(/\{q\}/g, variable('q'))
+        .replace(/⊃/g, relation('<span class="symbol">⊃</span>'))
+        .replace(/·/g, relation('.'))
+        .replace(/∨/g, relation('<span class="symbol">∨</span>'))
+        .replace(/≡/g, relation('<span class="symbol">≡</span>'))
+        .replace(/\|/g, relation('|'))
+        .replace(/[～~]/g, '<span class="mathop">~</span>'))
+    const renderRow = (row) => {
+        const [a, b, c, d, note, description] = row
+        const formulas = [
+            '{p}⊃{p}·{q}⊃{q}', '~({p}·{q})', '{q}⊃{p}', '{p}⊃{q}', '{p}∨{q}', '~{q}', '~{p}', '{p}·~{q}:∨:{q}·~{p}', '{p}≡{q}', '{p}', '{q}', '~{p}·~{q} 或 {p}|{q}', '{p}·~{q}', '{q}·~{p}', '{q}·{p}', '{p}·~{p}·{q}·~{q}'
+        ]
+        const formula = renderFormula(formulas[rows.indexOf(row)])
+        return `<tr><td class="righttight">(</td><td class="centertight">${a}</td><td class="centertight">${b}</td><td class="centertight">${c}</td><td class="centertight">${d}</td><td class="lefttight">)</td><td class="leftcell">${math(`(${variable('p')},&nbsp;${variable('q')})`)}&nbsp;&nbsp;</td><td class="leftcell">${renderText(note)}</td><td>${renderText(description)}&nbsp;&nbsp;${formula}</td></tr>`
+    }
+    return `<table class="fnlist">${rows.map(renderRow).join('')}</table>`
+}
+
+function applyFormatOverrides(result, translator) {
+    const isHan = translator === "韩林合"
+    result["5.02"] = isHan
+        ? `人们很容易将函项的主目与名称的标号混淆在一起。因为我从主目和标号中都能认出包含着它们的符号的所指。比如，在罗素的“${math(`${relation('+')}${subscript('','c')}`)}”中，“${math(subscript('','c'))}”就是一个标号，它表示，这个整个符号是基数的加法符号。但是，这种表示方式是以任意的约定为基础的，人们也可以不使用“${math(`${relation('+')}${subscript('','c')}`)}”，而选择一个简单符号；但是，在“${math('<span class="mathop">~</span>'+variable('p'))}”中 ${math(variable('p'))} 并不是一个标号，而是一个主目：在未理解 ${math(variable('p'))} 的意义之前，我们是不能理解 ${math('<span class="mathop">~</span>'+variable('p'))} 的意义的。<br />（在儒略・恺撒这个名称中，“儒略”是一个标号。一个标号总是构成了关于这样一个对象的描述的一个部分，我们将该标号附加在它的名称之上。比如，儒略氏族的那个恺撒。）<br />如果我没有弄错的话，弗雷格关于命题和函项的所指的理论就是建立在主目和标号的混淆基础之上的。对于弗雷格来说，诸逻辑命题是名称，而其主目就是这些名称的标号。`
+        : `函项的主目很容易和名称的附标相混淆。因为从主目和附标我都能看出包含它们的那些记号的指谓。<br />例如，当罗素写“${math(`${relation('+')}${subscript('','c')}`)}”时，其中 ${math(subscript('','c'))} 就是一个附标，它指明整个记号是用于基数的加号。但是这种标记法是一种任意约定的结果，因而完全可能选择一个简单的记号来代替“${math(`${relation('+')}${subscript('','c')}`)}”；可是，在“${math('<span class="mathop">~</span>'+variable('p'))}”中，${math(variable('p'))} 不是附标而是主目：除非已经先理解了 ${math(variable('p'))} 的意义，“${math('<span class="mathop">~</span>'+variable('p'))}”的意义就<u>不可能</u>理解。<br />（在名称尤利乌斯・恺撒中，“尤利乌斯”是一个附标。附标总是对对象的描述的一部分，我们把它附加到对象的名称上面：例如尤利乌斯家族中的<u>这位</u>恺撒。）<br />如果我没有弄错，弗雷格关于命题和函项的指谓理论，就是建立在混淆主目和附标的基础之上的。弗雷格认为逻辑命题是名称，而它们的主目则是这些名称的附标。`
+
+    const truthIntro = isHan
+        ? '每一给定数目的基本命题的诸种真值函项都可以写成如下形式的图式：'
+        : '一定数目的基本命题的真值函项，可以按以下这种图式列出：'
+    const truthEnd = isHan
+        ? '我将一个命题的诸真值主目的诸种真值可能情况中那些使其为真的情况称作它的真值基础。'
+        : '我将用命题的<u>真值基础</u>这个名称来称呼其真值主目使该命题为真的那些真值可能性。'
+    result["5.101"] = `${truthIntro}<!-- noindent -->${translatedTruthTable()}<br />${truthEnd}`
+    result["5.15"] = isHan
+        ? `如果 ${math(subscript('W','r'))} 是命题“r”的真值基础的数目，${math(subscript('W','rs'))} 是命题“s”的这样的真值基础的数目，它们同时也是“r”的真值基础，那么我们便称比例 ${math(`${subscript('W','rs')}${relation('∶')}${subscript('W','r')}`)} 为命题“r”给予命题“s”的概率度。`
+        : `如 ${math(subscript('w','r'))} 是命题“r”的真值基础数，${math(subscript('w','rs'))} 是同属命题“s”和“r”的真值基础数，则我们称比值 ${math(`${subscript('w','rs')}${relation('∶')}${subscript('w','r')}`)} 为命题“r”给予命题“s”的<u>概率</u>度。`
+    result["5.151"] = isHan
+        ? `在如上述5.101那样的图式中，设 ${math(subscript('W','r'))} 是命题r的“W”数，${math(subscript('W','rs'))} 是和命题r的那些“W”同列的命题s的“W”数。则命题r给命题s的概率为 ${math(`${subscript('W','rs')}${relation('∶')}${subscript('W','r')}`)}。`
+        : `在如上述5.101那样的图式中，设 ${math(subscript('w','r'))} 是命题r的“w”数，${math(subscript('w','rs'))} 是和命题r的那些“w”同列的命题s的“w”数。则命题r给命题s以概率 ${math(`${subscript('w','rs')}${relation('∶')}${subscript('w','r')}`)}。`
+    result["6.02"] = `由此我们便得到了数。我给出如下定义：<div class="centered"><table class="alignedmath"><tr><td class="righttight">${math(`${variable('x')}${relation('=')}`)}</td><td class="lefttight">${math(`<span class="mathop">Ω<sup>0</sup>’</span>${variable('x')}`)}&nbsp;&nbsp;Def.，并</td></tr><tr><td class="righttight">${math(`<span class="mathop">Ω’</span><span class="mathop">Ω<sup><var>ν</var></sup>’</span>${variable('x')}${relation('=')}`)}</td><td class="lefttight">${math(`<span class="mathop">Ω<sup><var>ν</var>+1</sup>’</span>${variable('x')}`)}&nbsp;&nbsp;Def.</td></tr></table></div>按照这些记号规则，我们写出系列<div class="centered">${math(`${variable('x')}，<span class="mathop">Ω’</span>${variable('x')}，<span class="mathop">Ω’</span><span class="mathop">Ω’</span>${variable('x')}，<span class="mathop">Ω’</span><span class="mathop">Ω’</span><span class="mathop">Ω’</span>${variable('x')}，<span class="mathrel">…</span>`)}</div>为：<div class="centered">${math(`<span class="mathop">Ω<sup>0</sup>’</span>${variable('x')}，<span class="mathop">Ω<sup>0+1</sup>’</span>${variable('x')}，<span class="mathop">Ω<sup>0+1+1</sup>’</span>${variable('x')}，<span class="mathop">Ω<sup>0+1+1+1</sup>’</span>${variable('x')}，<span class="mathrel">…</span>`)}</div>因此，我不写作“${math(`${variable('x')}，${variable('ξ')}，<span class="mathop">Ω’</span>${variable('ξ')}`)}”，而写作：<div class="centered">${math(`“<span class="mathop">Ω<sup>0</sup>’</span>${variable('x')}，<span class="mathop">Ω<sup><var>ν</var></sup>’</span>${variable('x')}，<span class="mathop">Ω<sup><var>ν</var>+1</sup>’</span>${variable('x')}]”`)}</div>而且我给出如下定义：<div class="centered"><table class="alignedmath"><tr><td class="lefttight">${math(`0+1=1`)}&nbsp;&nbsp;Def.</td></tr><tr><td class="lefttight">${math(`0+1+1=2`)}&nbsp;&nbsp;Def.</td></tr><tr><td class="lefttight">${math(`0+1+1+1=3`)}&nbsp;&nbsp;Def.</td></tr><tr><td class="lefttight">（以及依次类推）</td></tr></table></div>`
+    if (!isHan) {
+        result["6.02"] = result["6.02"]
+            .replace("由此我们便得到了数。", "<u>由此</u> 我们就达到了数。")
+            .replace("按照这些记号规则，我们写出系列", "这样，根据这些记号规则我把系列")
+            .replace("为：", "写作：")
+    }
+    result["6.03"] = `整数的一般形式是：${math(`[0，${variable('ξ')}，${variable('ξ')}${relation('+')}1]`)}。`
+    result["6.241"] = `因此，命题${math(`2 × 2${relation('=')}4`)}的证明进行如下：<div class="centered">${math(`<span class="mathop">(Ω<sup><var>ν</var></sup>)<sup><var>μ</var></sup>’</span>${variable('x')}${relation('=')}<span class="mathop">Ω<sup><var>ν</var>× <var>μ</var></sup>’</span>${variable('x')}`)} Def.<br />${math(`<span class="mathop">Ω<sup>2 × 2</sup>’</span>${variable('x')}${relation('=')}<span class="mathop">(Ω<sup>2</sup>)<sup>2</sup>’</span>${variable('x')}${relation('=')}<span class="mathop">(Ω<sup>2</sup>)<sup>1+1</sup>’</span>${variable('x')}${relation('=')}<span class="mathop">Ω<sup>2</sup>’</span><span class="mathop">Ω<sup>2</sup>’</span>${variable('x')}`)}<br />${math(`${relation('=')}<span class="mathop">Ω<sup>1+1</sup>’</span><span class="mathop">Ω<sup>1+1</sup>’</span>${variable('x')}${relation('=')}<span class="mathop">(Ω’Ω)’</span><span class="mathop">(Ω’Ω)’</span>${variable('x')}`)}<br />${math(`${relation('=')}<span class="mathop">Ω’</span><span class="mathop">Ω’</span><span class="mathop">Ω’</span><span class="mathop">Ω’</span>${variable('x')}${relation('=')}<span class="mathop">Ω<sup>1+1+1+1</sup>’</span>${variable('x')}${relation('=')}<span class="mathop">Ω<sup>4</sup>’</span>${variable('x')}`)}。</div>`
+    result["6.36111"] = isHan
+        ? `康德关于人们不能将其叠合在一起的左右手问题在平面上就已经存在了，甚至于在一维空间中也已经存在了，因为在这里我们也无法使${math(variable('a'))}和${math(variable('b'))}这两个全等的图形叠合在一起，除非我们把它们从这个空间中移出来。<!-- noindent --><div class="centeredsqueeze"><b>–&nbsp;–&nbsp;–&nbsp;<span class="tight"><span class="symbol">○</span>————<span class="nudgedown"><span class="symbol">✕</span></span></span>&nbsp;–&nbsp;–&nbsp;<span class="tight"><span class="nudgedown"><span class="symbol">✕</span></span>————<span class="symbol">○</span></span>&nbsp;–&nbsp;–&nbsp;–</b><br /><var class="smallvar">a</var>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var class="smallvar">b</var></div>左右手实际上是完全全等的。人们不能使它们叠合在一起，这点与此无关。如果我们能在四维空间中将右手的手套翻转过来，那么我们便能将它戴在左手上。`
+        : `康德的关于右手和左手不能使之重合的问题，在平面中就已经存在，甚至也存在于一维空间中：<!-- noindent --><div class="centeredsqueeze"><b>–&nbsp;–&nbsp;–&nbsp;<span class="tight"><span class="symbol">○</span>————<span class="nudgedown"><span class="symbol">✕</span></span></span>&nbsp;–&nbsp;–&nbsp;<span class="tight"><span class="nudgedown"><span class="symbol">✕</span></span>————<span class="symbol">○</span></span>&nbsp;–&nbsp;–&nbsp;–</b><br /><var class="smallvar">a</var>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var class="smallvar">b</var></div>如其中两个全等的图形${math(variable('a'))}和${math(variable('b'))}，除非越出这个空间，就不能使之重合。右手和左手事实上是真正地全等的，人们不能使它们重合与这一事实没有关系。<br />假如能够在四维空间中旋转，右手套就可以戴到左手上面。`
+
+    const cube = figureMarkup("thecube", "200", "200", "立方体图示")
+    const eye = figureMarkup("theeye", "200", "120", "视域图示")
+    result["5.5423"] = isHan
+        ? `知觉一个复合物就意味着知觉其构成成分是以如此这般的方式彼此关联在一起的。这点当然也解释了如下事实：人们可以以两种方式将下面这个图形看成立方体；以及所有类似的现象。${cube}因为我们实际上恰恰看到了两个不同的事实。（如果我首先看到的是诸a角，而只是快速地看了一下诸b角，那么出现在前面的将是诸a；反之，出现在前面的将是诸b。）`
+        : `感知一个复合物的意思就是感知到它的各组成部分以如此这般的方式互相关联着。${cube}这也能很好地解释，为何有两种可能的方式把如下图形看成为立方体；以及所有类似的现象。因为我们确实看到两个不同的事实。<br />（如果我先看定诸a角，对诸b角只是瞥及，于是诸a角显得在前；反之则诸b角显得在前。）`
+    result["5.6331"] = isHan
+        ? `因为视野并没有比如这样一种形式：${eye}`
+        : `视域肯定不具有如图这样的形式：${eye}`
+
+    const figures = [
+        figureMarkup("abfigureoneenglish", 156, 69, "真值组合图"),
+        figureMarkup("abfiguretwoenglish", 156, 124, "真值关联图"),
+        figureMarkup("abfigurethreeenglish", 47, 75, "否定形式图"),
+        figureMarkup("abfigurefourenglish", 156, 116, "合取形式图"),
+        figureMarkup("abfigurefiveenglish", 129, 168, "复合命题图"),
+    ]
+    result["6.1203"] = isHan
+        ? `为了将一个同语反复式认作为同语反复式，在不含一般性符号的同语反复式的情况下，我们可以使用如下直观的方法：将“p”、“q”、“r”等等写成“WpF”、“WqF”、“WrF”等等。这时，诸种真值组合可以通过括弧加以表达，例如：${figures[0]}而整个命题的真或者假与诸真值主目的诸种真值组合的配合，则可以如下方式通过短线加以表达：${figures[1]}因此，这个符号将表示比如 ${math(`${variable('p')}${relation('<span class="symbol">⊃</span>')}${variable('q')}`)} 这样的命题。现在我要研究一下 ${math('<span class="mathop">~</span>('+variable('p')+relation('.')+'<span class="mathop">~</span>'+variable('p')+')')} 这个命题（即矛盾律）是否为同语反复式。在我们的记号系统中，公式“～ξ”将被写成：${figures[2]}形式“ξ・η”则写为：${figures[3]}因而，命题“～（p・～q）”就表为：${figures[4]}在此如果用“p”替换该公式中的“q”，并考察最外层的W和F与其最里层的W和F的结合情况，结果将是：整个命题的真被配合给了其主目的所有真值组合，而其假则没有被配合给任何真值组合。`
+        : `为了看出一个表达式是重言式，在其中没有概括记号出现的情形下，可以应用如下的直观方法：我将“p”、“q”、“r”等等，写为“WpF”、“WqF”、“WrF”等等。用括号来表达真值组合，如：${figures[0]}并且用线段表示整个命题的真或假与其真值主目的真值组合之间的相关，方式如下：${figures[1]}这样，如上述这个记号就表述命题 ${math(`${variable('p')}${relation('<span class="symbol">⊃</span>')}${variable('q')}`)}。现在我想以举例的方式来考察一下命题 ${math('<span class="mathop">~</span>('+variable('p')+relation('.')+'<span class="mathop">~</span>'+variable('p')+')')}（矛盾律），看它是否为重言式。在我们的记号法中，形式“～ξ”写为：${figures[2]}形式“ξ・η”则写为：${figures[3]}因而，命题“～（p・～q）”就表为：${figures[4]}如果在这里我们用“p”代换“q”，并考察最外层的W和F与最里层的W和F的结合，那么就得出，整个命题的真相关于其主目的<u>一切</u>真值组合，而其假则不与其主目的任何真值组合相关。`
+
+    return result
+}
+
 function stripEpubLabel(content, rawLabel) {
     const escapedLabel = rawLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     return content
@@ -88,9 +216,10 @@ function parseEpub() {
     const result = {}
     parsed.forEach((item) => {
         if (expectedLabels.includes(item.label) && !result[item.label]) {
-            result[item.label] = item.parts.join("<br />")
+            result[item.label] = normalizeTranslationMarkup(item.parts.join("<br />"))
         }
     })
+    applyFormatOverrides(result, "贺绍甲")
     assertComplete(result, "贺绍甲")
     return result
 }
@@ -280,6 +409,7 @@ function parseHanPdf() {
     result["6.02"] =
         "由此我们便得到了数。我给出如下定义：x = Ω<sup>0</sup>'x Def. 和 Ω'Ω<sup>v</sup>'x = Ω<sup>v+1</sup>'x Def。"
     result["5.641"] = result["5.641"].split("在与奥格登讨论")[0].trim()
+    applyFormatOverrides(result, "韩林合")
     assertComplete(result, "韩林合")
     return result
 }
