@@ -24,7 +24,7 @@ test("keeps web formatting for formulas, tables, paragraphs, and figures", () =>
         assert.match(translations["6.36111"], /class="centeredsqueeze"/)
         assert.match(translations["5.5423"], /thecube\.svg/)
         assert.match(translations["5.6331"], /theeye\.svg/)
-        assert.match(translations["6.1203"], /abfigurefiveenglish\.svg/)
+        assert.match(translations["6.1203"], /abfigurefivegerman\.svg/)
     }
 
     const external = sections.find((section) => section.label === "5.15")

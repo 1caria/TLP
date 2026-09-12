@@ -164,11 +164,11 @@ function applyFormatOverrides(result, translator) {
         : `视域肯定不具有如图这样的形式：${eye}`
 
     const figures = [
-        figureMarkup("abfigureoneenglish", 156, 69, "真值组合图"),
-        figureMarkup("abfiguretwoenglish", 156, 124, "真值关联图"),
-        figureMarkup("abfigurethreeenglish", 47, 75, "否定形式图"),
-        figureMarkup("abfigurefourenglish", 156, 116, "合取形式图"),
-        figureMarkup("abfigurefiveenglish", 129, 168, "复合命题图"),
+        figureMarkup("abfigureonegerman", 156, 69, "真值组合图"),
+        figureMarkup("abfiguretwogerman", 156, 124, "真值关联图"),
+        figureMarkup("abfigurethreegerman", 47, 75, "否定形式图"),
+        figureMarkup("abfigurefourgerman", 156, 116, "合取形式图"),
+        figureMarkup("abfigurefivegerman", 129, 168, "复合命题图"),
     ]
     result["6.1203"] = isHan
         ? `为了将一个同语反复式认作为同语反复式，在不含一般性符号的同语反复式的情况下，我们可以使用如下直观的方法：将“p”、“q”、“r”等等写成“WpF”、“WqF”、“WrF”等等。这时，诸种真值组合可以通过括弧加以表达，例如：${figures[0]}而整个命题的真或者假与诸真值主目的诸种真值组合的配合，则可以如下方式通过短线加以表达：${figures[1]}因此，这个符号将表示比如 ${math(`${variable('p')}${relation('<span class="symbol">⊃</span>')}${variable('q')}`)} 这样的命题。现在我要研究一下 ${math('<span class="mathop">~</span>('+variable('p')+relation('.')+'<span class="mathop">~</span>'+variable('p')+')')} 这个命题（即矛盾律）是否为同语反复式。在我们的记号系统中，公式“～ξ”将被写成：${figures[2]}形式“ξ・η”则写为：${figures[3]}因而，命题“～（p・～q）”就表为：${figures[4]}在此如果用“p”替换该公式中的“q”，并考察最外层的W和F与其最里层的W和F的结合情况，结果将是：整个命题的真被配合给了其主目的所有真值组合，而其假则没有被配合给任何真值组合。`
