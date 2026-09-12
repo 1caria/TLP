@@ -80,9 +80,9 @@ function subscript(base, value) {
         : `<sub>${variable(value)}</sub>`
 }
 
-function translatedTruthTable() {
+function translatedTruthTable(isHan) {
     const rows = [
-        ['W','W','W','W','重言式（如果 {p}，那么 {p}；并且如果 {q}，那么 {q}。）',''],
+        ['W','W','W','W',`${isHan ? '同语反复式' : '重言式'}（如果 {p}，那么 {p}；并且如果 {q}，那么 {q}。）`,''],
         ['F','W','W','W','用话来说：','非 {p} 且 {q} 两者皆成立。'],
         ['W','F','W','W','”','如果 {q}，那么 {p}。'],
         ['W','W','F','W','”','如果 {p}，那么 {q}。'],
@@ -134,7 +134,7 @@ function applyFormatOverrides(result, translator) {
     const truthEnd = isHan
         ? '我将一个命题的诸真值主目的诸种真值可能情况中那些使其为真的情况称作它的真值基础。'
         : '我将用命题的<u>真值基础</u>这个名称来称呼其真值主目使该命题为真的那些真值可能性。'
-    result["5.101"] = `${truthIntro}<!-- noindent -->${translatedTruthTable()}<br />${truthEnd}`
+    result["5.101"] = `${truthIntro}<!-- noindent -->${translatedTruthTable(isHan)}<br />${truthEnd}`
     result["5.15"] = isHan
         ? `如果 ${math(subscript('W','r'))} 是命题“r”的真值基础的数目，${math(subscript('W','rs'))} 是命题“s”的这样的真值基础的数目，它们同时也是“r”的真值基础，那么我们便称比例 ${math(`${subscript('W','rs')}${relation('∶')}${subscript('W','r')}`)} 为命题“r”给予命题“s”的概率度。`
         : `如 ${math(subscript('w','r'))} 是命题“r”的真值基础数，${math(subscript('w','rs'))} 是同属命题“s”和“r”的真值基础数，则我们称比值 ${math(`${subscript('w','rs')}${relation('∶')}${subscript('w','r')}`)} 为命题“r”给予命题“s”的<u>概率</u>度。`

@@ -27,6 +27,9 @@ test("keeps web formatting for formulas, tables, paragraphs, and figures", () =>
         assert.match(translations["6.1203"], /abfigurefivegerman\.svg/)
     }
 
+    assert.match(han["5.101"], /同语反复式/)
+    assert.doesNotMatch(han["5.101"], /重言式/)
+
     const external = sections.find((section) => section.label === "5.15")
     assert.ok(external.pmc.includes("<sub><var>r</var></sub>"))
 })
