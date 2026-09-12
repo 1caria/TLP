@@ -6,11 +6,13 @@
 
 ## 在线访问
 
-本项目通过 GitHub Pages 自动发布：
+启用 GitHub Pages 后，本项目会通过 GitHub Actions 自动发布到：
 
 <https://1caria.github.io/TLP/>
 
 每次向 `master` 或 `feat/chinese-localization` 分支推送代码时，GitHub Actions 都会重新构建 `dist/` 并发布网站。
+
+首次启用需要在 GitHub 仓库的 `Settings → Pages` 中将 `Build and deployment` 的来源设为 `GitHub Actions`。启用后，可以在 `Actions` 页面重新运行最近一次“部署 GitHub Pages”任务。
 
 ## 本地运行
 
