@@ -1,6 +1,7 @@
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8">
+    <title>《逻辑哲学论》地铁图</title>
     <meta name="viewport" content="width=device-width, initial-scale=1000, maximum-scale=1, user-scalable=0"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -19,9 +20,9 @@
         <div class="col-md-3 accordion-column">
             <div class="row" id="accordion-panel-button-row">
                 <div class="form-group">
-                        <button type="button" id="collapse-all-btn" class="btn btn-primary btn-sm">Collapse All</button>
-                        <button type="button" id="expand-all-btn" class="btn btn-primary btn-sm">Expand All</button>
-                        <button type="button" id="close-all-btn" class="btn btn-primary btn-sm">Close All</button>
+                        <button type="button" id="collapse-all-btn" class="btn btn-primary btn-sm">收起全部</button>
+                        <button type="button" id="expand-all-btn" class="btn btn-primary btn-sm">展开全部</button>
+                        <button type="button" id="close-all-btn" class="btn btn-primary btn-sm">关闭全部</button>
                 </div>
             </div>
             <div class="row">
@@ -29,9 +30,10 @@
                     <div class="form-group">
                         <!--Contains ogden unless Prototractatus is selected -->
                         <select class="form-control" id="version-selector-all">
-                            <option value="ger">German</option>
-                            <option value="ogd">Ogden</option>
-                            <option value="pmc">Pears/McGuinness</option>
+                            <option value="han">韩林合译本</option>
+                            <option value="ger">德文原文</option>
+                            <option value="ogd">奥格登译本</option>
+                            <option value="pmc">皮尔斯/麦吉尼斯译本</option>
                             <!-- <option value="str">Stern</option> -->
                         </select>
                     </div>
@@ -43,18 +45,18 @@
         </div>
         <div class="col-md-12 map-column">
             <div class="row">
-                <div class="col-md-11"><input id="pt-btn" class="btn btn-primary btn-sm" type="button" value="Load Prototractatus"/></div>
+                <div class="col-md-11"><input id="pt-btn" class="btn btn-primary btn-sm" type="button" value="加载《原型逻辑哲学论》"/></div>
                 <!--Reset button refits map to the screen-->
-                <div class="col-md-1"><input id="reset-btn" class="btn btn-primary" type="button" value="Reset"/></div>
+                <div class="col-md-1"><input id="reset-btn" class="btn btn-primary" type="button" value="重置"/></div>
             </div>
             <div class="row">
                 <form class="form-inline" id="page-select-form">
                     <div class="form-group">
-                        <label for="start-page">Start Page</label>
+                        <label for="start-page">起始页</label>
                         <input type="Number" class="form-control" id="start-page">
-                        <label for="end-page">End Page</label>
+                        <label for="end-page">结束页</label>
                         <input type="Number" class="form-control" id="end-page">
-                        <button id="page-submit" type="submit" class="btn btn-primary">View</button>
+                        <button id="page-submit" type="submit" class="btn btn-primary">查看</button>
                     </div>
                 </form>
             </div>
@@ -68,7 +70,7 @@
     </div>-->
 </div>
 <script
-        src="http://code.jquery.com/jquery-3.3.1.min.js"
+        src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>

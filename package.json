@@ -4,11 +4,14 @@
   "description": "An interactive subway-style map of Ludwig Wittgenstein's Tractatus Logico-Philosophicus",
   "main": "src/app.js",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack --config webpack.config.js",
     "prepublishOnly": "npm run build",
-    "watch": "webpack --watch",
+    "watch": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack --watch",
     "webpack": "webpack",
-    "start": "webpack --watch & webpack-dev-server --open-page 'webpack-dev-server/dist'"
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack-dev-server --open-page dist/index.html",
+    "test": "node --test scripts/import-han-linhe.test.js",
+    "translation:import": "node scripts/import-han-linhe.js",
+    "translation:check": "node scripts/import-han-linhe.js --validate-only"
   },
   "author": "Matthew Butler",
   "license": "MIT",
@@ -17,6 +20,7 @@
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
+    "cross-env": "^7.0.3",
     "webpack": "^4.28.4",
     "webpack-cli": "^3.2.1",
     "webpack-dev-server": "^3.7.2"

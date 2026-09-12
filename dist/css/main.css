@@ -410,6 +410,12 @@ nav a:hover {
     padding-right: 10px;
 }
 
+#accordion-panel-button-row .form-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 .diff, .pnum{
     padding: 5px;
     margin-left: 10px;
@@ -1050,4 +1056,13 @@ span.verlinks {
 
 .text-display-li {
     list-style-type: none;
+    line-height: 1.75;
+    text-align: left;
+}
+
+.accordion-column,
+button,
+input,
+select {
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
 }

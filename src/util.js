@@ -55,7 +55,8 @@ export var Utility
                         d.ger,
                         d.ogd,
                         d.pmc,
-                        d.str
+                        d.str,
+                        d.han
                     )
                     if (d.label == sectionNum[i]) {
                         let result = sec.getTextForSelectedVersion(lang)

@@ -99,7 +99,8 @@ export class Line {
                     o.ger,
                     o.ogd,
                     o.pmc,
-                    o.str
+                    o.str,
+                    o.han
                 )
                 sectionAr.push(section)
             }

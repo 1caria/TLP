@@ -9,7 +9,8 @@ export class Section {
         ger,
         ogd,
         pmc,
-        str
+        str,
+        han
     ) {
         this.label = label
         this.fontSize = fontSize
@@ -20,10 +21,13 @@ export class Section {
         this.ogd = ogd
         this.pmc = pmc
         this.str = str
+        this.han = han
     }
     getTextForSelectedVersion(version) {
         let v
-        if (version == "ger") {
+        if (version == "han") {
+            v = this.han
+        } else if (version == "ger") {
             v = this.ger
         } else if (version == "ogd") {
             v = this.ogd
@@ -36,6 +40,7 @@ export class Section {
     }
     displayText(showSelector, version, divCounter, template, util) {
         let div = "collapse" + divCounter
+        let hasHanTranslation = Boolean(this.han && this.han.trim())
         //create a new div and append to accordion div. Add 'Section ' + to line 48 for optional label
         let element = $(
             '<div class="panel panel-default">' +
@@ -63,6 +68,11 @@ export class Section {
             $("#" + div + " .panel-body").append(
                 $("<div>").load(langVersion, function () {
                     $(".version-selector").val(version)
+                    if (!hasHanTranslation) {
+                        $("option[value='han']", this)
+                            .prop("disabled", true)
+                            .text("韩林合译本（待导入）")
+                    }
                 })
             )
             element.addClass("individual-section")
@@ -83,6 +93,10 @@ export class Section {
             "str",
             this.getTextForSelectedVersion("str")
         )
+        $("#" + div + " .panel-body").attr(
+            "han",
+            this.getTextForSelectedVersion("han")
+        )
         $("#" + div + " .panel-body").append(
             $('<li class="text-display-li">' + text + "</li>").load(
                 text,
@@ -100,9 +114,9 @@ export class Section {
             let textLabel = label.toString()
             let returnVal = util.findDiff(textLabel, version)
             $("#" + div).append(
-                '<br /><div class="pnum">text difference when compared to TLP ' +
+                '<br /><div class="pnum">与《逻辑哲学论》段落 ' +
                     util.ptToTlp(textLabel) +
-                    "</div>"
+                    " 的文本差异</div>"
             )
             $("#" + div).append(returnVal)
         }

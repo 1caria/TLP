@@ -24,12 +24,26 @@ let sectionsJson = require("./data/sections.json")
 let ptSectionsJson = require("./data/ptSections.json")
 let linesJson = require("./data/lines.json")
 let ptLinesJson = require("./data/ptLines.json")
+let hanLinheJson = require("./data/hanLinhe.json")
+
+const hanLinheSections = hanLinheJson.sections || {}
+sectionsJson.sections.forEach(function (section) {
+    section.han = hanLinheSections[section.label] || ""
+})
+const hasCompleteHanLinheTranslation = sectionsJson.sections
+    .filter(function (section) {
+        return section.ger && section.ger.trim()
+    })
+    .every(function (section) {
+        return section.han && section.han.trim()
+    })
+const defaultTlpVersion = hasCompleteHanLinheTranslation ? "han" : "ger"
 export var tractatus
 ;(function (tractatus) {
     class Container {
         constructor() {
-            //version = ger, pmc, ogd
-            this._version = "ger"
+            // version = han, ger, pmc, ogd (TLP); ger, pmc (PT)
+            this._version = defaultTlpVersion
             this._gap = 50
             this._width = $("#map").width() //doesn't work yet
             this._height = $(window).height()
@@ -51,8 +65,15 @@ export var tractatus
             return decodeURIComponent(results[2].replace(/\+/g, " "))
         }
         get version() {
-            if (localStorage.getItem("tlp-version") != null) {
-                return localStorage.getItem("tlp-version")
+            let storedVersion = localStorage.getItem("tlp-version")
+            if (this.template == "pt") {
+                return storedVersion == "pmc" ? "pmc" : "ger"
+            }
+            if (storedVersion == "han" && !hasCompleteHanLinheTranslation) {
+                return "ger"
+            }
+            if (storedVersion != null) {
+                return storedVersion
             }
             return this._version
         }
@@ -151,16 +172,21 @@ export var tractatus
             //hide the page selector unless PT is selected
             $("#page-select-form").hide()
             $("#accordion").collapse().sortable()
+            if (!hasCompleteHanLinheTranslation) {
+                $("option[value='han']")
+                    .prop("disabled", true)
+                    .text("韩林合译本（待导入）")
+            }
             $("#version-selector-all").val(version)
             $("#reset-btn").on("click", function () {
-                localStorage.setItem('tlp-version', "ger")
+                localStorage.setItem("tlp-version", defaultTlpVersion)
                 let url = window.location.href
                 url = url.split("?")[0]
                 window.location.replace(url)
             })
             //choose which template to use (PT or TLP)
             $("#pt-btn").on("click", function () {
-                if ($(this).val() == "Load Tractatus") {
+                if (container.template == "pt") {
                     localStorage.setItem("tlp-template", "tlp")
                     container.template = "tlp"
                 } else {
@@ -173,14 +199,15 @@ export var tractatus
             })
             //show the page selector if PT is selected
             if (container.template == "pt") {
-                //localStorage.setItem('tlp-version', "ger");
-                $("#pt-btn").html("Load Tractatus").val("Load Tractatus")
-                $("option[value='ogd']").remove()
+                $("#pt-btn")
+                    .html("加载《逻辑哲学论》")
+                    .val("加载《逻辑哲学论》")
+                $("option[value='ogd'], option[value='han']").remove()
                 $("#page-select-form").show()
             } else {
                 $("#pt-btn")
-                    .html("Load Prototractatus")
-                    .val("Load Prototractatus")
+                    .html("加载《原型逻辑哲学论》")
+                    .val("加载《原型逻辑哲学论》")
             }
             /*
              Leaving for now.  May want something like this in the future.
@@ -255,9 +282,9 @@ export var tractatus
                                 $(".diff", parent).remove()
                                 let returnVal = u.findDiff(sectionNum, version)
                                 parent.append(
-                                    '<div class="pnum">text difference when compared to TLP ' +
+                                    '<div class="pnum">与《逻辑哲学论》段落 ' +
                                         u.ptToTlp(sectionNum) +
-                                        "</div>"
+                                        " 的文本差异</div>"
                                 )
                                 parent.append(returnVal)
                             }
@@ -298,9 +325,9 @@ export var tractatus
                         $(".diff", parent).remove()
                         let returnVal = u.findDiff(sectionNum, v)
                         parent.append(
-                            '<div class="pnum">text difference when compared to TLP ' +
+                            '<div class="pnum">与《逻辑哲学论》段落 ' +
                                 u.ptToTlp(sectionNum) +
-                                "</div>"
+                                " 的文本差异</div>"
                         )
                         parent.append(returnVal)
                     }
@@ -360,7 +387,8 @@ export var tractatus
                     section.ger,
                     section.ogd,
                     section.pmc,
-                    section.str
+                    section.str,
+                    section.han
                 )
 
                 container.divCounter = node.displayText(
@@ -405,7 +433,8 @@ export var tractatus
                     o.ger,
                     o.ogd,
                     o.pmc,
-                    o.str
+                    o.str,
+                    o.han
                 )
                 sectionAr.push(section)
             })
