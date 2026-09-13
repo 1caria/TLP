@@ -1,42 +1,56 @@
 const assert = require("node:assert/strict")
 const test = require("node:test")
 
-const { cleanPdfBlock, stripEpubLabel } = require("./generate-translations")
+const {
+    cleanPdfBlock,
+    parseHanEpub,
+    stripEpubLabel,
+} = require("./generate-translations")
 
-test("keeps web formatting for formulas, tables, paragraphs, and figures", () => {
+test("parses every displayed proposition from the Han Linhe EPUB", () => {
     const sections = require("../src/data/sections.json").sections
-    const han = require("../src/data/hanLinhe.json").sections
-    const he = require("../src/data/heShaojia.json").sections
+    const displayedLabels = sections.filter((section) => section.ger.trim())
+    const han = parseHanEpub()
+    assert.equal(Object.keys(han).length, 525)
+    assert.deepEqual(Object.keys(han), displayedLabels.map((section) => section.label))
+    assert.equal(han["1"], "世界是所有实际情况")
+    assert.equal(han["7"], "对于不可言说的东西，人们必须以沉默待之")
+    assert.doesNotMatch(han["6.02"], /6\.021/)
+})
 
-    for (const translations of [han, he]) {
-        assert.match(translations["5.15"], /<sub><var>r<\/var><\/sub>/)
-        assert.match(translations["5.151"], /<sub><var>rs<\/var><\/sub>/)
-        assert.match(translations["5.101"], /<table class="fnlist">/)
-        assert.equal(
-            (translations["5.101"].match(/<tr>/g) || []).length,
-            16
-        )
-        assert.match(translations["6.02"], /<table class="alignedmath">/)
-        assert.equal(
-            (translations["6.241"].match(/<br \/>/g) || []).length,
-            3
-        )
-        assert.match(translations["6.36111"], /class="centeredsqueeze"/)
-        assert.match(translations["5.5423"], /thecube\.svg/)
-        assert.match(translations["5.6331"], /theeye\.svg/)
-        assert.match(translations["6.1203"], /abfigurefivegerman\.svg/)
-    }
-
-    assert.match(han["4.27"], /class="possibilities"/)
-    assert.match(han["4.31"], /class="truthtable"/)
-    assert.equal((han["4.31"].match(/class="truthtable"/g) || []).length, 3)
-    assert.match(han["4.442"], /class="truthtable"/)
-
+test("preserves EPUB paragraphs, lists, formula images, and diagrams", () => {
+    const han = parseHanEpub()
+    assert.equal((han["5.02"].match(/<br \/>/g) || []).length, 2)
+    assert.equal((han["5.101"].match(/<br \/>/g) || []).length, 17)
     assert.match(han["5.101"], /同语反复式/)
     assert.doesNotMatch(han["5.101"], /重言式/)
+    assert.match(han["5.15"], /W<sub>r<\/sub>/)
+    assert.match(han["5.151"], /W<sub>rs<\/sub>/)
+    for (const [label, image] of [
+        ["4.27", "image01253.jpeg"],
+        ["4.31", "image01254.jpeg"],
+        ["4.42", "image01255.jpeg"],
+        ["4.442", "image01256.jpeg"],
+        ["5.5423", "image01258.jpeg"],
+        ["5.6331", "image01259.jpeg"],
+        ["6.36111", "image01268.jpeg"],
+    ]) {
+        assert.match(han[label], new RegExp(`images/han-${image}`))
+    }
+    assert.equal((han["6.1203"].match(/<img\b/g) || []).length, 5)
+})
 
-    const external = sections.find((section) => section.label === "5.15")
-    assert.ok(external.pmc.includes("<sub><var>r</var></sub>"))
+test("repairs formula glyph encodings without changing the translation", () => {
+    const han = parseHanEpub()
+    assert.match(han["4.013"], /♯和♭/)
+    assert.match(han["4.1272"], /ℵ<sub>0<\/sub>/)
+    assert.match(han["4.442"], /⊢/)
+    assert.match(han["6.02"], /Ω<sup>0<\/sup>’x/)
+    assert.match(han["6.02"], /Ω<sup>ν\+1<\/sup>’x/)
+    assert.match(han["6.241"], /（Ων）<sup>μ<\/sup>’x/)
+    assert.match(han["6.241"], /<div class="centered">/)
+    assert.equal((han["6.241"].match(/<br \/>/g) || []).length, 3)
+    assert.doesNotMatch(Object.values(han).join(""), /[�□\uE000-\uF8FF]/)
 })
 
 test("removes EPUB proposition labels and footnote anchors", () => {

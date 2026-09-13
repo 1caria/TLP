@@ -1,6 +1,7 @@
 const fs = require("fs")
 const path = require("path")
 const childProcess = require("child_process")
+const cheerio = require("cheerio")
 
 const root = path.resolve(__dirname, "..")
 const sections = JSON.parse(
@@ -9,6 +10,7 @@ const sections = JSON.parse(
 const expectedLabels = sections
     .filter((section) => section.ger && section.ger.trim())
     .map((section) => section.label)
+const allLabels = sections.map((section) => section.label)
 
 const epubPath = path.join(
     root,
@@ -17,6 +19,15 @@ const epubPath = path.join(
 const pdfPath = path.join(
     root,
     "逻辑哲学论 (Ludwig Wittgenstein (路德维希·维特根斯坦)) (z-library.sk, 1lib.sk, z-lib.sk).pdf"
+)
+const hanEpubPath = path.join(
+    root,
+    "维特根斯坦文集（套装全8卷） (维特根斯坦) (z-library.sk, 1lib.sk, z-lib.sk).epub"
+)
+const hanEpubRoot = path.join(root, "tmp", "han-epub", "OEBPS")
+const hanEpubTextFiles = Array.from(
+    { length: 7 },
+    (_, index) => path.join(hanEpubRoot, "Text", `part00${index + 21}.xhtml`)
 )
 const pdfTextPath = path.join(root, "tmp", "han-linhe-ocr.txt")
 const epubHtmlPath = path.join(
@@ -56,6 +67,155 @@ function normalizeTranslationMarkup(value) {
         .replace(/src=\"(?:\.\.\/)?(?:images\/)?(Image\d+\.jpg)\"/gi, 'src="images/$1"')
         .replace(/\s+\/?>/g, (match) => match)
         .trim()
+}
+
+function normalizeHanEpubFragment(fragment) {
+    const $ = cheerio.load(`<root>${fragment}</root>`, {
+        xmlMode: true,
+        decodeEntities: false,
+    })
+    const rootNode = $("root")
+    rootNode.find("a").remove()
+    rootNode.find("span").each((_, element) => {
+        const span = $(element)
+        if (!span.attr("class") && !(span.attr("style") || "").trim()) {
+            span.replaceWith(`<em>${span.html() || ""}</em>`)
+        }
+    })
+    rootNode.find("sub").each((_, element) => {
+        const sub = $(element)
+        sub.text(sub.text().replace(/\s+/g, ""))
+    })
+    rootNode.find("sup").each((_, element) => {
+        const sup = $(element)
+        const value = sup.text().replace(/v/g, "ν")
+        const primeEncoded = /[,，]$/.test(value)
+        sup.text(value.replace(/[,，]$/, ""))
+        if (primeEncoded) sup.after("’")
+    })
+    rootNode.find("img").each((_, element) => {
+        const image = $(element)
+        const source = image.attr("src") || ""
+        const name = path.basename(source)
+        image.attr("src", `images/han-${name}`)
+        image.attr("alt", image.attr("alt") || "公式或图示")
+        image.removeAttr("style")
+    })
+    rootNode.find("br").replaceWith("<br />")
+    return decodeEntities(rootNode.html() || "")
+        .replace(/\s+/g, " ")
+        .replace(/>\s+</g, "><")
+        .replace(/\s+([，。！？；：、）】》])/g, "$1")
+        .trim()
+}
+
+function repairHanEpubFormulaEncoding(fragment, label) {
+    let repaired = fragment
+        .replace(//g, "ℵ")
+        .replace(/├/g, "⊢")
+    if (label === "4.013") {
+        repaired = repaired.replace(/#/g, "♯").replace(/ь/g, "♭")
+    }
+    if (label === "6.241") {
+        repaired = repaired.replace(/（Ωv）/g, "（Ων）")
+    }
+    return repaired
+}
+
+function restoreHanEpubDisplayLayout(result) {
+    const [intro, definition, proof] = result["6.241"].split("<br />")
+    const proofLines = proof
+        .replace(
+            "=Ω<sup>1+1</sup>’Ω<sup>1+1</sup>’x",
+            "<br />=Ω<sup>1+1</sup>’Ω<sup>1+1</sup>’x"
+        )
+        .replace("=Ω’Ω’Ω’Ω’x", "<br />=Ω’Ω’Ω’Ω’x")
+        .replace(/=/g, "=<wbr />")
+    const responsiveDefinition = definition.replace(/=/g, "=<wbr />")
+    result["6.241"] =
+        `${intro}<div class="centered">${responsiveDefinition}<br />${proofLines}</div>`
+    return result
+}
+
+function stripHanEpubLabel(fragment, label) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    return fragment
+        .replace(
+            new RegExp(`^\\s*${escaped}(?:\\.|。)?(?:\\s|&nbsp;|　)*`),
+            ""
+        )
+        .trim()
+}
+
+function renderHanEpubBlock($, element) {
+    const node = $(element)
+    const tag = element.tagName.toLowerCase()
+    const inner = normalizeHanEpubFragment(node.html() || "")
+    if (!inner || !inner.replace(/<[^>]+>/g, "").trim() && !/<img\b/i.test(inner)) {
+        return ""
+    }
+    if (tag === "div" && /text-align\s*:\s*center/i.test(node.attr("style") || "")) {
+        return `<div class="centered">${inner}</div>`
+    }
+    if (tag === "blockquote") {
+        const fragment = cheerio.load(`<root>${inner}</root>`, {
+            xmlMode: true,
+            decodeEntities: false,
+        })
+        const lines = fragment("root").children("p").map((_, paragraph) =>
+            fragment(paragraph).html()
+        ).get().filter(Boolean)
+        return `<div class="centered">${lines.join("<br />") || inner}</div>`
+    }
+    if (tag === "p" && /^<img\b[^>]*\/>$/i.test(inner)) {
+        return `<div class="centered">${inner}</div>`
+    }
+    return inner
+}
+
+function parseHanEpub() {
+    ensureHanEpubSource()
+    const result = {}
+    let currentLabel = null
+
+    hanEpubTextFiles.forEach((file, chapterIndex) => {
+        const html = fs.readFileSync(file, "utf8")
+        const $ = cheerio.load(html, { xmlMode: true, decodeEntities: false })
+        $("body").children().each((_, element) => {
+            const tag = element.tagName.toLowerCase()
+            if (!new Set(["h1", "p", "div", "blockquote"]).has(tag)) return
+
+            const node = $(element).clone()
+            node.find("a").remove()
+            const plain = decodeEntities(node.text()).replace(/\s+/g, " ").trim()
+            let label = null
+            if (tag === "h1") {
+                label = String(chapterIndex + 1)
+            } else {
+                const match = plain.match(/^([1-7](?:\.\d+)*)(?=\s|　)/)
+                if (match && allLabels.includes(match[1])) label = match[1]
+            }
+
+            let block = renderHanEpubBlock($, element)
+            if (label) {
+                currentLabel = label
+                block = stripHanEpubLabel(block, label)
+                result[label] = repairHanEpubFormulaEncoding(block, label)
+            } else if (currentLabel && block) {
+                block = repairHanEpubFormulaEncoding(block, currentLabel)
+                result[currentLabel] = result[currentLabel]
+                    ? `${result[currentLabel]}<br />${block}`
+                    : block
+            }
+        })
+    })
+
+    const displayed = Object.fromEntries(
+        expectedLabels.map((label) => [label, result[label]])
+    )
+    restoreHanEpubDisplayLayout(displayed)
+    assertComplete(displayed, "韩林合 EPUB")
+    return displayed
 }
 
 function math(content) {
@@ -446,6 +606,40 @@ function parseHanPdf(applyOverrides = true) {
     return result
 }
 
+function ensureHanEpubSource() {
+    const firstTextFile = hanEpubTextFiles[0]
+    if (!fs.existsSync(firstTextFile)) {
+        fs.mkdirSync(path.dirname(hanEpubRoot), { recursive: true })
+        try {
+            childProcess.execFileSync(
+                "tar",
+                ["-xf", hanEpubPath, "-C", path.dirname(hanEpubRoot)],
+                { stdio: "inherit" }
+            )
+        } catch (error) {
+            if (!fs.existsSync(firstTextFile)) throw error
+        }
+    }
+}
+
+function copyHanEpubImages(translations) {
+    ensureHanEpubSource()
+    const names = new Set()
+    Object.values(translations).forEach((translation) => {
+        for (const match of translation.matchAll(/src="images\/han-([^"]+)"/g)) {
+            names.add(match[1])
+        }
+    })
+    const destinationDir = path.join(root, "dist", "images")
+    fs.mkdirSync(destinationDir, { recursive: true })
+    names.forEach((name) => {
+        fs.copyFileSync(
+            path.join(hanEpubRoot, "Images", name),
+            path.join(destinationDir, `han-${name}`)
+        )
+    })
+}
+
 function ensureSourceFiles() {
     if (!fs.existsSync(epubHtmlPath)) {
         fs.mkdirSync(path.dirname(epubHtmlPath), { recursive: true })
@@ -486,7 +680,8 @@ function writeJson(fileName, value) {
 
 function main() {
     const he = parseEpub()
-    const han = parseHanPdf()
+    const han = parseHanEpub()
+    copyHanEpubImages(han)
     writeJson("heShaojia.json", {
         translator: "贺绍甲",
         source: "商务印书馆《逻辑哲学论》（EPUB，2009/2011）",
@@ -494,7 +689,7 @@ function main() {
     })
     writeJson("hanLinhe.json", {
         translator: "韩林合",
-        source: "商务印书馆《维特根斯坦文集》第2卷《逻辑哲学论》（PDF，2019）",
+        source: "商务印书馆《维特根斯坦文集》第2卷《逻辑哲学论》（EPUB）",
         sections: han,
     })
     console.log(`已生成两套译文：${expectedLabels.length} 条/套。`)
@@ -508,6 +703,7 @@ module.exports = {
     flexibleLabelPattern,
     parseEpub,
     parseEpubLabelsInOrder,
+    parseHanEpub,
     parseHanPdf,
     stripEpubLabel,
 }

@@ -22,6 +22,7 @@
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
+    "cheerio": "^1.0.0-rc.12",
     "cross-env": "^7.0.3",
     "webpack": "^4.28.4",
     "webpack-cli": "^3.2.1",
