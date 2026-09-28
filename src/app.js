@@ -176,10 +176,118 @@ export var tractatus
         set ref(value) {
             this._ref = value
         }
+        setupPaneResizer() {
+            let workspace = document.getElementById("workspace")
+            let divider = document.getElementById("pane-divider")
+            if (!workspace || !divider) {
+                return
+            }
+            let savedWidth = parseFloat(localStorage.getItem("tlp-text-pane-width"))
+            if (isFinite(savedWidth)) {
+                divider.setAttribute(
+                    "aria-valuenow",
+                    Math.min(55, Math.max(20, savedWidth)).toFixed(1)
+                )
+                workspace.style.setProperty(
+                    "--text-pane-width",
+                    Math.min(55, Math.max(20, savedWidth)) + "%"
+                )
+            }
+            let dragging = false
+            let activePointerId = null
+            let setWidthFromClientX = function (clientX) {
+                let rect = workspace.getBoundingClientRect()
+                let dividerWidth = divider.getBoundingClientRect().width || 8
+                let minimumTextWidth = Math.min(240, rect.width * 0.35)
+                let minimumMapWidth = Math.min(320, rect.width * 0.35)
+                let maximumTextWidth = Math.min(
+                    rect.width * 0.55,
+                    rect.width - dividerWidth - minimumMapWidth
+                )
+                let width = Math.max(
+                    minimumTextWidth,
+                    Math.min(maximumTextWidth, clientX - rect.left)
+                )
+                let percentage = (width / rect.width) * 100
+                workspace.style.setProperty("--text-pane-width", percentage + "%")
+                divider.setAttribute("aria-valuenow", percentage.toFixed(1))
+                localStorage.setItem("tlp-text-pane-width", percentage.toString())
+                if (
+                    window.panZoomTractatus &&
+                    typeof window.panZoomTractatus.resize === "function"
+                ) {
+                    window.panZoomTractatus.resize()
+                }
+            }
+            let nudge = function (amount) {
+                let rect = workspace.getBoundingClientRect()
+                let current = parseFloat(
+                    getComputedStyle(workspace).getPropertyValue("--text-pane-width")
+                )
+                if (!isFinite(current)) {
+                    current = 32
+                }
+                setWidthFromClientX(
+                    rect.left + rect.width * ((current + amount) / 100)
+                )
+            }
+            divider.addEventListener("pointerdown", function (event) {
+                if (event.pointerType === "mouse" && event.button !== 0) {
+                    return
+                }
+                dragging = true
+                activePointerId = event.pointerId
+                divider.setPointerCapture(event.pointerId)
+                document.body.classList.add("resizing-panes")
+                event.preventDefault()
+            })
+            divider.addEventListener("pointermove", function (event) {
+                if (dragging && event.pointerId === activePointerId) {
+                    setWidthFromClientX(event.clientX)
+                    event.preventDefault()
+                }
+            })
+            let stopDragging = function (event) {
+                if (!dragging || (event && event.pointerId !== activePointerId)) {
+                    return
+                }
+                dragging = false
+                activePointerId = null
+                document.body.classList.remove("resizing-panes")
+            }
+            divider.addEventListener("pointerup", stopDragging)
+            divider.addEventListener("pointercancel", stopDragging)
+            divider.addEventListener("keydown", function (event) {
+                if (event.key === "ArrowLeft") {
+                    nudge(-2)
+                    event.preventDefault()
+                } else if (event.key === "ArrowRight") {
+                    nudge(2)
+                    event.preventDefault()
+                } else if (event.key === "Home") {
+                    let rect = workspace.getBoundingClientRect()
+                    setWidthFromClientX(rect.left + rect.width * 0.2)
+                    event.preventDefault()
+                } else if (event.key === "End") {
+                    let rect = workspace.getBoundingClientRect()
+                    setWidthFromClientX(rect.left + rect.width * 0.55)
+                    event.preventDefault()
+                }
+            })
+            window.addEventListener("resize", function () {
+                if (
+                    window.panZoomTractatus &&
+                    typeof window.panZoomTractatus.resize === "function"
+                ) {
+                    window.panZoomTractatus.resize()
+                }
+            })
+        }
         setupAccordionSidePanel() {
             let container = this
             let version = container.version
             $(".accordion-column").hide()
+            $("#workspace").removeClass("has-text-pane")
             //hide the page selector unless PT is selected
             $("#page-select-form").hide()
             $("#accordion").collapse().sortable()
@@ -239,6 +347,7 @@ export var tractatus
                     function () {
                         if ($(".panel-default").length <= 0) {
                             $(".accordion-column").hide()
+                            $("#workspace").removeClass("has-text-pane")
                         }
                     }
                 )
@@ -252,6 +361,7 @@ export var tractatus
             $("#close-all-btn").on("click", function () {
                 $(".panel-default").remove()
                 $(".accordion-column").hide()
+                $("#workspace").removeClass("has-text-pane")
             })
             /*Note: An overall version selector becomes available when clicking a line which displays multiple panels (one for each section in the line)
                   If an individual circle/Section is clicked, a panel will display and will have it's own version selector.  This is so that you can
@@ -634,6 +744,7 @@ container.util = util
 container.sectionList =
     container.template == "pt" ? ptSectionsJson : sectionsJson
 container.lineList = container.template == "pt" ? ptLinesJson : linesJson
+container.setupPaneResizer()
 container.setupAccordionSidePanel()
 container.setupPTPaging()
 container.setupD3()

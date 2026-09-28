@@ -16,8 +16,8 @@
 <body>
 
 <div class="container-fluid" id="container">
-    <div class="row">
-        <div class="col-md-3 accordion-column">
+    <div id="workspace">
+        <section class="accordion-column" id="text-pane" aria-label="文本面板">
             <div class="row" id="accordion-panel-button-row">
                 <div class="form-group">
                         <button type="button" id="collapse-all-btn" class="btn btn-primary btn-sm">收起全部</button>
@@ -43,8 +43,9 @@
             <div class="row"></div>
             <!--Holds the collapseable text panels-->
             <div class="panel-group" id="accordion"></div>
-        </div>
-        <div class="col-md-12 map-column">
+        </section>
+        <div id="pane-divider" role="separator" aria-orientation="vertical" aria-label="调整文本面板和地图宽度" aria-valuemin="20" aria-valuemax="55" aria-valuenow="32" tabindex="0"></div>
+        <section class="map-column" id="map-pane" aria-label="地图面板">
             <div class="row">
                 <div class="col-md-11"><input id="pt-btn" class="btn btn-primary btn-sm" type="button" value="加载《原型逻辑哲学论》"/></div>
                 <!--Reset button refits map to the screen-->
@@ -62,7 +63,7 @@
                 </form>
             </div>
             <div id="map"></div>
-        </div>
+        </section>
     </div>
 <!--
     Leaving for now.  May want something like this in the future.

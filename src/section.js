@@ -122,8 +122,8 @@ export class Section {
             )
         )
         $(".accordion-column").show()
-        //the Collapseable panels will now show, and the tractatus map will move over to the right.
-        $(".map-column").removeClass("col-md-12").addClass("col-md-9")
+        //Show the resizable text pane while keeping the map in its own pane.
+        $("#workspace").addClass("has-text-pane")
         //check if page is pt
         if (template == "pt") {
             let label = this.label

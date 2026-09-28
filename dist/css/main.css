@@ -1066,3 +1066,131 @@ input,
 select {
     font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
 }
+
+/* Independent text/map panes with a draggable divider. */
+html,
+body {
+    height: 100%;
+}
+
+#container {
+    height: calc(100vh - 40px);
+    box-sizing: border-box;
+}
+
+#workspace {
+    --text-pane-width: 32%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+}
+
+#workspace.has-text-pane {
+    grid-template-columns: var(--text-pane-width) 8px minmax(0, 1fr);
+}
+
+.accordion-column,
+.map-column {
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.accordion-column {
+    overflow: auto;
+    padding: 0 15px;
+}
+
+.map-column {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 15px;
+}
+
+#pane-divider {
+    display: none;
+    width: 8px;
+    min-width: 8px;
+    height: 100%;
+    box-sizing: border-box;
+    cursor: col-resize;
+    touch-action: none;
+    background: #e6e6e6;
+    border-left: 1px solid #b8b8b8;
+    border-right: 1px solid #b8b8b8;
+}
+
+#workspace.has-text-pane #pane-divider {
+    display: block;
+}
+
+#pane-divider:hover,
+#pane-divider:focus {
+    background: #c9dff0;
+    border-color: #6b9fc3;
+    outline: none;
+}
+
+.resizing-panes,
+.resizing-panes * {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+.map-column > .row {
+    flex: 0 0 auto;
+}
+
+.map-column #map {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#map > svg {
+    width: 100%;
+    height: 100% !important;
+}
+
+.text-display-li,
+.text-display-li *,
+.panel-body,
+.panel-body * {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.text-display-li {
+    cursor: text;
+}
+
+@media (max-width: 767px) {
+    #workspace.has-text-pane {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(180px, 42%) 8px minmax(0, 1fr);
+    }
+
+    #workspace.has-text-pane .accordion-column {
+        grid-row: 1;
+    }
+
+    #workspace.has-text-pane #pane-divider {
+        grid-row: 2;
+        width: 100%;
+        height: 8px;
+        min-width: 0;
+        min-height: 8px;
+        cursor: row-resize;
+        border-top: 1px solid #b8b8b8;
+        border-bottom: 1px solid #b8b8b8;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    #workspace.has-text-pane .map-column {
+        grid-row: 3;
+    }
+}
