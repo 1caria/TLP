@@ -348,6 +348,12 @@ export var tractatus
                         if ($(".panel-default").length <= 0) {
                             $(".accordion-column").hide()
                             $("#workspace").removeClass("has-text-pane")
+                            if (
+                                window.panZoomTractatus &&
+                                typeof window.panZoomTractatus.resize === "function"
+                            ) {
+                                window.panZoomTractatus.resize()
+                            }
                         }
                     }
                 )
@@ -362,6 +368,12 @@ export var tractatus
                 $(".panel-default").remove()
                 $(".accordion-column").hide()
                 $("#workspace").removeClass("has-text-pane")
+                if (
+                    window.panZoomTractatus &&
+                    typeof window.panZoomTractatus.resize === "function"
+                ) {
+                    window.panZoomTractatus.resize()
+                }
             })
             /*Note: An overall version selector becomes available when clicking a line which displays multiple panels (one for each section in the line)
                   If an individual circle/Section is clicked, a panel will display and will have it's own version selector.  This is so that you can

@@ -124,6 +124,12 @@ export class Section {
         $(".accordion-column").show()
         //Show the resizable text pane while keeping the map in its own pane.
         $("#workspace").addClass("has-text-pane")
+        if (
+            window.panZoomTractatus &&
+            typeof window.panZoomTractatus.resize === "function"
+        ) {
+            window.panZoomTractatus.resize()
+        }
         //check if page is pt
         if (template == "pt") {
             let label = this.label
