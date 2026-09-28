@@ -290,7 +290,13 @@ export var tractatus
             $("#workspace").removeClass("has-text-pane")
             //hide the page selector unless PT is selected
             $("#page-select-form").hide()
-            $("#accordion").collapse().sortable()
+            $("#accordion").collapse().sortable({
+                // Reorder a panel only from its numbered heading. The body must
+                // remain a normal text-selection surface for copying.
+                handle: ".panel-heading",
+                cancel: ".panel-body, .panel-body *, .close-panel, select, input, button",
+                distance: 5,
+            })
             if (!hasCompleteHanLinheTranslation) {
                 $("option[value='han']")
                     .prop("disabled", true)
