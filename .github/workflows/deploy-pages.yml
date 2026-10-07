@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - feat/chinese-localization
   workflow_dispatch:
 
 permissions:

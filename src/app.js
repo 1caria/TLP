@@ -20,6 +20,8 @@ import { Reference } from "./reference"
 import { Utility } from "./util"
 import { Section } from "./section"
 import { Line } from "./line"
+import { installFormulaCopy } from "./formula-copy"
+import { displaySectionText } from "./text-display"
 let sectionsJson = require("./data/sections.json")
 let ptSectionsJson = require("./data/ptSections.json")
 let linesJson = require("./data/lines.json")
@@ -400,25 +402,7 @@ export var tractatus
                                 .parents("div:first")
                                 .attr("id")
                             let text = panelBody.attr(version)
-                            $(".text-display-li", panelBody).html(text)
-                            $("li", panelBody).remove()
-                            panelBody
-                                .append(
-                                    $(
-                                        '<li class="text-display-li">' +
-                                            text +
-                                            "</li>"
-                                    )
-                                )
-                                .load(text, function () {
-                                    if (typeof MathJax !== "undefined" && MathJax.Hub) {
-                                        MathJax.Hub.Queue([
-                                            "Typeset",
-                                            MathJax.Hub,
-                                            parentDivId,
-                                        ])
-                                    }
-                                })
+                            displaySectionText(panelBody, text, parentDivId)
                             //check if page is pt
                             if (container.template == "pt") {
                                 let parent = panelBody.parents(
@@ -451,21 +435,7 @@ export var tractatus
                     let v = $("option:selected", $this).attr("value")
                     let text = panelBody.attr(v)
                     let u = container.util
-                    $this.closest($(".text-display-li")).html(text)
-                    $("li", panelBody).remove()
-                    panelBody
-                        .append(
-                            $('<li class="text-display-li">' + text + "</li>")
-                        )
-                        .load(text, function () {
-                            if (typeof MathJax !== "undefined" && MathJax.Hub) {
-                                MathJax.Hub.Queue([
-                                    "Typeset",
-                                    MathJax.Hub,
-                                    parentDivId,
-                                ])
-                            }
-                        })
+                    displaySectionText(panelBody, text, parentDivId)
                     //check if page is pt
                     if (container.template == "pt") {
                         let parent = panelBody.parents(".panel-collapse:first")
@@ -743,6 +713,7 @@ export var tractatus
     tractatus.Container = Container
 })(tractatus || (tractatus = {}))
 //initialize everything
+installFormulaCopy()
 let container = new tractatus.Container()
 let tlpSection = container.getParameterByName("tlp")
 let ptSection = container.getParameterByName("pt")

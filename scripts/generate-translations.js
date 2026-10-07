@@ -2,6 +2,8 @@ const fs = require("fs")
 const path = require("path")
 const childProcess = require("child_process")
 const cheerio = require("cheerio")
+const { applyTextFormulas } = require("./text-formulas")
+const { applyLogicalDiagrams } = require("./logical-diagrams")
 
 const root = path.resolve(__dirname, "..")
 const sections = JSON.parse(
@@ -173,7 +175,7 @@ function renderHanEpubBlock($, element) {
     return inner
 }
 
-function parseHanEpub() {
+function parseHanEpub(applyFormatting = true) {
     ensureHanEpubSource()
     const result = {}
     let currentLabel = null
@@ -214,6 +216,10 @@ function parseHanEpub() {
         expectedLabels.map((label) => [label, result[label]])
     )
     restoreHanEpubDisplayLayout(displayed)
+    if (applyFormatting) {
+        applyTextFormulas(displayed, "韩林合")
+        applyLogicalDiagrams(displayed, "han")
+    }
     assertComplete(displayed, "韩林合 EPUB")
     return displayed
 }
@@ -379,7 +385,7 @@ function stripEpubLabel(content, rawLabel) {
         .trim()
 }
 
-function parseEpub(applyOverrides = true) {
+function parseEpub(applyFormatting = true) {
     ensureSourceFiles()
     const html = fs.readFileSync(epubHtmlPath, "utf8")
     const paragraphPattern = /<p\b[^>]*class="([^"]+)"[^>]*>([\s\S]*?)<\/p>/gi
@@ -393,13 +399,22 @@ function parseEpub(applyOverrides = true) {
         if (className.includes("left-content")) {
             const plain = content.replace(/<[^>]+>/g, " ")
             const labelMatch = plain.match(/^\s*([0-9]+(?:\.[0-9]+)*)/)
-            if (!labelMatch) continue
+            if (!labelMatch) {
+                if (current && content) current.parts.push(content)
+                continue
+            }
             const rawLabel = labelMatch[1]
             const label = rawLabel === "2.20" ? "2.2" : rawLabel
             current = { label, parts: [stripEpubLabel(content, rawLabel)] }
             parsed.push(current)
-        } else if (current && className.includes("content") && !className.includes("chapter")) {
-            if (content) current.parts.push(content)
+        } else if (current && (className.includes("content") || className.includes("picture")) && !className.includes("chapter")) {
+            if (content) {
+                current.parts.push(
+                    className.includes("center-content") || className.includes("picture")
+                        ? `<div class="centered">${content}</div>`
+                        : content
+                )
+            }
         }
     }
 
@@ -409,7 +424,10 @@ function parseEpub(applyOverrides = true) {
             result[item.label] = normalizeTranslationMarkup(item.parts.join("<br />"))
         }
     })
-    if (applyOverrides) applyFormatOverrides(result, "贺绍甲")
+    if (applyFormatting) {
+        applyTextFormulas(result, "贺绍甲")
+        applyLogicalDiagrams(result, "he")
+    }
     assertComplete(result, "贺绍甲")
     return result
 }

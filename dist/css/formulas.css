@@ -1,0 +1,78 @@
+/* Formulas are selectable DOM text. Only original geometric illustrations
+   remain images; no mathematical formula or truth diagram uses media. */
+.formula,
+.mathmode {
+    font-family: tgregular, "DejaVu Sans", "Microsoft YaHei", serif;
+    font-size: 1em;
+    letter-spacing: normal;
+}
+
+.formula var,
+.mathmode var {
+    font-family: tgitalic, "DejaVu Sans", serif;
+    font-style: italic;
+}
+
+.formula .nop,
+.formula .mathrm {
+    font-style: normal;
+}
+
+.formula .overlined {
+    display: inline-block;
+    line-height: 0.95;
+    border-top: 0.065em solid currentColor;
+}
+
+.formula sub,
+.formula sup {
+    font-size: 0.72em;
+    line-height: 0;
+    position: relative;
+}
+
+.formula sub { vertical-align: baseline; bottom: -0.25em; }
+.formula sup { vertical-align: baseline; top: -0.55em; }
+
+.text-display-li table {
+    max-width: 100%;
+}
+
+.formula-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.4em 0;
+}
+
+.formula-scroll > .centered,
+.formula-scroll > .formula-line {
+    width: max-content;
+    min-width: 100%;
+    white-space: nowrap;
+}
+
+.text-display-li .formula { white-space: nowrap; }
+.text-display-li { overflow-x: auto; }
+
+.formula table,
+table.formula {
+    font-size: inherit;
+}
+
+.formula td,
+.formula th {
+    padding: 0.1em 0.3em;
+    white-space: nowrap;
+}
+
+.text-fraction {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.fraction-top { border-bottom: 0.065em solid currentColor; padding: 0 0.16em 0.08em; }
+.fraction-bottom { padding: 0.08em 0.16em 0; }

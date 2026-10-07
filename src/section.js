@@ -1,4 +1,5 @@
 import * as _ from "lodash"
+import { displaySectionText } from "./text-display"
 export class Section {
     constructor(
         label,
@@ -111,16 +112,7 @@ export class Section {
             "he",
             this.getTextForSelectedVersion("he")
         )
-        $("#" + div + " .panel-body").append(
-            $('<li class="text-display-li">' + text + "</li>").load(
-                text,
-                function () {
-                    if (typeof MathJax !== "undefined" && MathJax.Hub) {
-                        MathJax.Hub.Queue(["Typeset", MathJax.Hub, div])
-                    }
-                }
-            )
-        )
+        displaySectionText($("#" + div + " .panel-body"), text, div)
         $(".accordion-column").show()
         //Show the resizable text pane while keeping the map in its own pane.
         $("#workspace").addClass("has-text-pane")

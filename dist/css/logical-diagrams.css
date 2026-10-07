@@ -1,0 +1,42 @@
+/* All symbols below are selectable HTML text; curves are CSS borders. */
+.logical-diagram {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    margin: .6em .25em;
+    color: #111;
+    font-family: "Times New Roman", "Noto Serif", serif;
+    font-size: 1em;
+    line-height: 1;
+    text-indent: 0;
+    white-space: nowrap;
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.logical-diagram .logical-node {
+    position: absolute;
+    display: inline-block;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    line-height: 1;
+    background: transparent;
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.logical-diagram .logical-line {
+    position: absolute;
+    display: block;
+    height: 0;
+    border-top: .067em solid currentColor;
+    transform-origin: 0 0;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.logical-diagram .logical-route {
+    position: static;
+    pointer-events: none;
+}
